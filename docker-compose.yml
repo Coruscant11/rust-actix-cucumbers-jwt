@@ -1,0 +1,29 @@
+version: '3.9'
+services:
+  mongodb:
+    image: arm64v8/mongo
+    container_name: artemis-mongodb
+    restart: always
+    env_file:
+      - env_config/mongodb_dev.env
+    ports:
+      - "27017:27017"
+    volumes:
+      - data:/data
+  mongo-express:
+    image: mongo-express
+    container_name: artemis-mongoexpress
+    restart: always
+    depends_on:
+      - mongodb
+    ports:
+      - "8081:8081"
+    env_file:
+      - env_config/mongoexpress_dev.env
+
+volumes:
+  data: {}
+
+networks:
+  default:
+    name: artemis_network
