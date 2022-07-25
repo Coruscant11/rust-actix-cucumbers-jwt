@@ -29,7 +29,7 @@ pub async fn get_player(
             Some(player) => HttpResponse::Ok().json(player),
             None => HttpResponse::NotFound().finish(),
         },
-        Err(e) => HttpResponse::InternalServerError().body("Error while finding the player."),
+        Err(_) => HttpResponse::InternalServerError().body("Error while finding the player."),
     }
 }
 

@@ -1,6 +1,6 @@
-mod models;
+pub mod models;
 mod payload;
-mod repository;
+pub mod repository;
 mod routes;
 
 use actix_web::{web, App, HttpServer};
