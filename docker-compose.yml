@@ -9,7 +9,7 @@ services:
     depends_on:
       - mongodb
     env_file:
-      - env_config/api_prod.env
+      - .env/api_prod.env
     ports:
       - "8080:8080"
   mongodb:
@@ -17,7 +17,7 @@ services:
     container_name: artemis-mongodb
     restart: always
     env_file:
-      - env_config/mongodb_dev.env
+      - .env/mongodb_dev.env
     ports:
       - "27017:27017"
     volumes:
@@ -31,7 +31,7 @@ services:
     ports:
       - "8081:8081"
     env_file:
-      - env_config/mongoexpress_dev.env
+      - .env/mongoexpress_dev.env
 
 volumes:
   data: {}
