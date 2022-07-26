@@ -1,5 +1,17 @@
 version: '3.9'
 services:
+  api:
+    build:
+      context: ./
+      dockerfile: artemis-api/Dockerfile
+    container_name: artemis-api
+    restart: always
+    depends_on:
+      - mongodb
+    env_file:
+      - env_config/api_prod.env
+    ports:
+      - "8080:8080"
   mongodb:
     image: arm64v8/mongo
     container_name: artemis-mongodb

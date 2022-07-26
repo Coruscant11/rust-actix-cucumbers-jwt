@@ -1,10 +1,10 @@
-use actix_web::{delete, get, post, put, web, HttpResponse, Responder, Result};
+use actix_web::{delete, get, post, put, web, HttpResponse, Responder};
 use mongodb::Client;
 
-use crate::models::player::Player;
-use crate::repository::player_repository::PlayerRepo;
-use crate::repository::MongoRepo;
-use crate::repository::RepoError;
+use artemis_lib::models::player::Player;
+use artemis_lib::repository::player_repository::PlayerRepo;
+use artemis_lib::repository::MongoRepo;
+use artemis_lib::repository::RepoError;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(get_players);
@@ -43,14 +43,20 @@ pub async fn create_player(
     let discord_id = path.into_inner();
 
     if discord_id.eq(&player.discord_id) {
-        match PlayerRepo::create(&client, player).await {
-            Ok(_) => HttpResponse::Ok().body(format!("Player [{}] created.", &discord_id)),
-            Err(e) => match e {
-                RepoError::AlreadyExistsError => HttpResponse::BadRequest()
-                    .body(format!("Player [{}] already exists.", &discord_id)),
-                _ => HttpResponse::InternalServerError()
-                    .body(format!("Error while creating player [{}].", &discord_id)),
-            },
+        if player.check_fields() {
+            match PlayerRepo::create(&client, player).await {
+                Ok(_) => HttpResponse::Ok().body(format!("Player [{}] created.", &discord_id)),
+                Err(e) => match e {
+                    RepoError::AlreadyExistsError => HttpResponse::BadRequest()
+                        .body(format!("Player [{}] already exists.", &discord_id)),
+                    RepoError::BadFieldError => HttpResponse::BadRequest()
+                        .body(format!("Player [{}] has bad fields.", &discord_id)),
+                    _ => HttpResponse::InternalServerError()
+                        .body(format!("Error while creating player [{}].", &discord_id)),
+                },
+            }
+        } else {
+            HttpResponse::BadRequest().body("Please checks your fields.")
         }
     } else {
         HttpResponse::BadRequest()
@@ -68,15 +74,20 @@ pub async fn update_player(
     let discord_id = path.into_inner();
 
     if discord_id.eq(&player.discord_id) {
-        match PlayerRepo::update(&client, &discord_id, player).await {
-            Ok(_) => HttpResponse::Ok().body(format!("Player [{}] updated.", &discord_id)),
-            Err(e) => match e {
-                RepoError::DoNotExistsError => {
-                    HttpResponse::NotFound().body(format!("Player [{}] not found.", &discord_id))
-                }
-                _ => HttpResponse::InternalServerError()
-                    .body(format!("Error while updating player [{}].", &discord_id)),
-            },
+        if player.check_fields() {
+            match PlayerRepo::update(&client, &discord_id, player).await {
+                Ok(_) => HttpResponse::Ok().body(format!("Player [{}] updated.", &discord_id)),
+                Err(e) => match e {
+                    RepoError::DoNotExistsError => HttpResponse::NotFound()
+                        .body(format!("Player [{}] not found.", &discord_id)),
+                    RepoError::BadFieldError => HttpResponse::BadRequest()
+                        .body(format!("Player [{}] has bad fields.", &discord_id)),
+                    _ => HttpResponse::InternalServerError()
+                        .body(format!("Error while updating player [{}].", &discord_id)),
+                },
+            }
+        } else {
+            HttpResponse::BadRequest().body("Please checks your fields.")
         }
     } else {
         HttpResponse::BadRequest()

@@ -13,6 +13,7 @@ pub enum RepoError {
     UpdateError,
     DeleteError,
     FindError,
+    BadFieldError,
 }
 
 #[async_trait]

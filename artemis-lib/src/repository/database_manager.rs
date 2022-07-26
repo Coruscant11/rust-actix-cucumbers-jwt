@@ -50,7 +50,6 @@ pub async fn init_database() -> Client {
     /* Setup collections */
     init_collections(&client).await;
 
-    println!("Successfully connected to MongoDB. (URI : {}).", mongo_uri);
     return client;
 }
 

@@ -24,15 +24,16 @@ impl MongoRepo<Player, String> for PlayerRepo {
             .create_index(model, None)
             .await
         {
-            Ok(_) => {
-                println!("PlayerRepo: Index created. Repository ready to use.");
-                Ok(())
-            }
+            Ok(_) => Ok(()),
             Err(_) => Err(RepoError::InitError),
         }
     }
 
     async fn create(client: &Client, new_element: Player) -> Result<(), RepoError> {
+        if !new_element.check_fields() {
+            return Err(RepoError::BadFieldError);
+        }
+
         match Self::exists(client, &new_element.discord_id).await {
             Ok(true) => Err(RepoError::AlreadyExistsError),
             Ok(false) => {
@@ -55,6 +56,10 @@ impl MongoRepo<Player, String> for PlayerRepo {
         existing_element_id: &String,
         new_element: Player,
     ) -> Result<(), RepoError> {
+        if !new_element.check_fields() {
+            return Err(RepoError::BadFieldError);
+        }
+
         match Self::exists(client, &new_element.discord_id).await {
             Ok(true) => {
                 match client

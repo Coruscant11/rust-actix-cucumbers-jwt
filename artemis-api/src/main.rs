@@ -1,15 +1,13 @@
-pub mod models;
 mod payload;
-pub mod repository;
 mod routes;
 
 use actix_web::{web, App, HttpServer};
 
-use repository::database_manager::init_database;
+use artemis_lib::repository::database_manager::init_database;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    const HOST: &str = "localhost";
+    const HOST: &str = "0.0.0.0";
     const PORT: u16 = 8080;
 
     println!("Initializing database...");
