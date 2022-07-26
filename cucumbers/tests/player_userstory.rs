@@ -1,10 +1,10 @@
-use artemis_lib::models::player::Player;
-use artemis_lib::repository::player_repository::PlayerRepo;
-use artemis_lib::repository::MongoRepo;
 use assert_str::assert_str_eq;
 use async_trait::async_trait;
 use cucumber::*;
 use gherkin::Step;
+use lib::models::player::Player;
+use lib::repository::player_repository::PlayerRepo;
+use lib::repository::MongoRepo;
 use mongodb::Client;
 use reqwest::Response;
 use std::convert::Infallible;
@@ -28,7 +28,7 @@ impl World for PlayerWorld {
             players: vec![],
             latest_responses: vec![],
             latest_bodys: vec![],
-            client: artemis_lib::repository::database_manager::init_database().await,
+            client: lib::repository::database_manager::init_database().await,
         })
     }
 }

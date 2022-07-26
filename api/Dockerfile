@@ -4,5 +4,5 @@ COPY . .
 RUN cargo build --release
 
 FROM debian:bullseye-slim as runtime
-COPY --from=builder /usr/src/artemis/target/release/artemis-api .
-ENTRYPOINT ["./artemis-api"]
+COPY --from=builder /usr/src/artemis/target/release/api .
+ENTRYPOINT ["./api"]

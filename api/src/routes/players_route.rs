@@ -1,10 +1,10 @@
 use actix_web::{delete, get, post, put, web, HttpResponse, Responder};
 use mongodb::Client;
 
-use artemis_lib::models::player::Player;
-use artemis_lib::repository::player_repository::PlayerRepo;
-use artemis_lib::repository::MongoRepo;
-use artemis_lib::repository::RepoError;
+use lib::models::player::Player;
+use lib::repository::player_repository::PlayerRepo;
+use lib::repository::MongoRepo;
+use lib::repository::RepoError;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(get_players);

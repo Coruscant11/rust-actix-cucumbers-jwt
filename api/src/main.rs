@@ -1,9 +1,8 @@
-mod payload;
 mod routes;
 
 use actix_web::{web, App, HttpServer};
 
-use artemis_lib::repository::database_manager::init_database;
+use lib::repository::database_manager::init_database;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {

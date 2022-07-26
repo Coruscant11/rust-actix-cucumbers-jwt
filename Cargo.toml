@@ -1,7 +1,7 @@
 [workspace]
 
 members = [
-    "artemis-api",
-    "artemis-lib",
-    "artemis-cucumbers"
+    "api",
+    "lib",
+    "cucumbers"
 ]

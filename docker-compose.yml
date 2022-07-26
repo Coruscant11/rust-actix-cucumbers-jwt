@@ -3,7 +3,7 @@ services:
   api:
     build:
       context: ./
-      dockerfile: artemis-api/Dockerfile
+      dockerfile: api/Dockerfile
     container_name: artemis-api
     restart: always
     depends_on:
