@@ -13,7 +13,7 @@ services:
     ports:
       - "8080:8080"
   mongodb:
-    image: arm64v8/mongo
+    image: mongo
     container_name: artemis-mongodb
     restart: always
     env_file:
