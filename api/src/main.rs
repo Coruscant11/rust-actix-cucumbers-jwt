@@ -1,6 +1,6 @@
 mod routes;
 
-use actix_web::{web, App, HttpServer};
+use actix_web::{guard::Guard, web, App, HttpServer};
 
 use lib::repository::database_manager::init_database;
 
@@ -15,10 +15,36 @@ async fn main() -> std::io::Result<()> {
     println!("Starting server [{}:{}].", HOST, PORT);
     HttpServer::new(move || {
         App::new()
-            .configure(routes::players_route::config)
+            .service(
+                web::scope("")
+                    .guard(AuthGuard)
+                    .configure(routes::players_route::config),
+            )
             .app_data(web::Data::new(client.clone()))
     })
     .bind((HOST, PORT))?
     .run()
     .await
+}
+
+pub struct AuthGuard;
+
+impl Guard for AuthGuard {
+    fn check(&self, ctx: &actix_web::guard::GuardContext<'_>) -> bool {
+        println!(
+            "Token d'authentification reçu : [{}]",
+            ctx.head()
+                .headers()
+                .get("authorization")
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .to_string()
+                .split(" ")
+                .collect::<Vec<&str>>()[1..]
+                .join(" ")
+                .to_string()
+        );
+        return true;
+    }
 }
