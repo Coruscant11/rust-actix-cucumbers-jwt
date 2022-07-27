@@ -45,9 +45,9 @@ pub async fn create_player(
     if discord_id.eq(&player.discord_id) {
         if player.check_fields() {
             match PlayerRepo::create(&client, player).await {
-                Ok(_) => HttpResponse::Ok().body(format!("Player [{}] created.", &discord_id)),
+                Ok(_) => HttpResponse::Created().body(format!("Player [{}] created.", &discord_id)),
                 Err(e) => match e {
-                    RepoError::AlreadyExistsError => HttpResponse::BadRequest()
+                    RepoError::AlreadyExistsError => HttpResponse::Conflict()
                         .body(format!("Player [{}] already exists.", &discord_id)),
                     RepoError::BadFieldError => HttpResponse::BadRequest()
                         .body(format!("Player [{}] has bad fields.", &discord_id)),

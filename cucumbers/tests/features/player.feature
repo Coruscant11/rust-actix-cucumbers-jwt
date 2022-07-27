@@ -8,7 +8,7 @@ Feature: Player
             | 1234567890 | Player | 111222333 | 333222111 |
         And the discord_id is not already registered
         When I register the player
-        Then I receive a code 200
+        Then I receive a code 201
         And the player is registered
 
     @serial
@@ -18,7 +18,7 @@ Feature: Player
             | 1234567891 | Player | 111222333 | 333222111 |
         And the discord_id is already registered
         When I register the player
-        Then I receive a code 400
+        Then I receive a code 409
 
     @serial
     Scenario: Register a player with invalid data
