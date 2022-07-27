@@ -6,7 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-actix-web = "4.1.0"
-mongodb = { version = "2.3.0", features = ["bson-uuid-0_8"] }
 lib = { path = "../lib" }
+tide = "0.16.0"
+mongodb = { version = "2.3.0", default-features = false, features = ["bson-uuid-0_8", "async-std-runtime"] }
+serde = { version = "1.0.140", features = ["derive"] }
+async-std = { version = "1.12.0", features = ["attributes"] }
 

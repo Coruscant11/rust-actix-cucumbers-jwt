@@ -1,24 +1,16 @@
+mod config;
 mod routes;
 
-use actix_web::{web, App, HttpServer};
+use routes::players_route;
 
-use lib::repository::database_manager::init_database;
+use crate::config::state::RepoState;
 
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    const HOST: &str = "0.0.0.0";
-    const PORT: u16 = 8080;
-
-    println!("Initializing database...");
-    let client = init_database().await;
-
-    println!("Starting server [{}:{}].", HOST, PORT);
-    HttpServer::new(move || {
-        App::new()
-            .configure(routes::players_route::config)
-            .app_data(web::Data::new(client.clone()))
-    })
-    .bind((HOST, PORT))?
-    .run()
-    .await
+#[async_std::main]
+async fn main() -> tide::Result<()> {
+    println!("Starting server...");
+    let mut app = tide::with_state(RepoState::new().await.unwrap());
+    app.with(tide::log::LogMiddleware::new());
+    players_route::config(&mut app);
+    app.listen("0.0.0.0:8080").await?;
+    Ok(())
 }

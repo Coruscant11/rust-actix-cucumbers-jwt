@@ -1,112 +1,128 @@
-use actix_web::{delete, get, post, put, web, HttpResponse, Responder};
-use mongodb::Client;
-
 use lib::models::player::Player;
 use lib::repository::player_repository::PlayerRepo;
 use lib::repository::MongoRepo;
 use lib::repository::RepoError;
+use tide::convert::json;
+use tide::Request;
+use tide::Response;
+use tide::Server;
+use tide::StatusCode;
 
-pub fn config(cfg: &mut web::ServiceConfig) {
-    cfg.service(get_players);
-    cfg.service(get_player);
-    cfg.service(create_player);
-    cfg.service(update_player);
-    cfg.service(delete_player);
+use crate::RepoState;
+
+pub fn config(app: &mut Server<RepoState>) {
+    app.at("/players").get(get_players);
+    app.at("/players/:discord_id").get(get_player);
+    app.at("/players/:discord_id").post(create_player);
+    app.at("players/:discord_id").put(update_player);
+    app.at("players/:discord_id").delete(delete_player);
 }
 
-#[get("/players")]
-pub async fn get_players(client: web::Data<Client>) -> impl Responder {
-    HttpResponse::Ok().json(PlayerRepo::get_all(&client).await.ok())
+pub async fn get_players(req: Request<RepoState>) -> tide::Result {
+    match PlayerRepo::get_all(&req.state().client).await {
+        Ok(players) => {
+            let mut response = Response::new(StatusCode::Ok);
+            response.set_body(json!(players));
+            Ok(response)
+        }
+        Err(_) => Ok(Response::new(StatusCode::InternalServerError)),
+    }
 }
 
-#[get("/players/{discord_id}")]
-pub async fn get_player(
-    client: web::Data<Client>,
-    discord_id: web::Path<String>,
-) -> impl Responder {
-    match PlayerRepo::get(&client, &discord_id.into_inner()).await {
+async fn get_player(req: Request<RepoState>) -> tide::Result {
+    let discord_id = req.param("discord_id").unwrap().to_string();
+
+    match PlayerRepo::get(&req.state().client, &discord_id).await {
         Ok(player) => match player {
-            Some(player) => HttpResponse::Ok().json(player),
-            None => HttpResponse::NotFound().finish(),
+            Some(player) => {
+                let mut response = Response::new(StatusCode::Ok);
+                response.set_body(json!(player));
+                Ok(response)
+            }
+            None => Ok(Response::new(StatusCode::NotFound)),
         },
-        Err(_) => HttpResponse::InternalServerError().body("Error while finding the player."),
+        Err(_) => Ok(Response::new(StatusCode::InternalServerError)),
     }
 }
 
-#[post("/players/{discord_id}")]
-pub async fn create_player(
-    client: web::Data<Client>,
-    path: web::Path<String>,
-    player: web::Json<Player>,
-) -> impl Responder {
-    let player = player.into_inner();
-    let discord_id = path.into_inner();
+pub async fn create_player(mut req: Request<RepoState>) -> tide::Result {
+    let discord_id = req.param("discord_id").unwrap().to_string();
+    let player = req.body_json::<Player>().await.unwrap();
 
     if discord_id.eq(&player.discord_id) {
         if player.check_fields() {
-            match PlayerRepo::create(&client, player).await {
-                Ok(_) => HttpResponse::Ok().body(format!("Player [{}] created.", &discord_id)),
+            match PlayerRepo::create(&req.state().client, player).await {
+                Ok(_) => {
+                    let mut response = Response::new(StatusCode::Created);
+                    response.set_body(format!("Player [{}] created.", &discord_id));
+                    Ok(response)
+                }
                 Err(e) => match e {
-                    RepoError::AlreadyExistsError => HttpResponse::BadRequest()
-                        .body(format!("Player [{}] already exists.", &discord_id)),
-                    RepoError::BadFieldError => HttpResponse::BadRequest()
-                        .body(format!("Player [{}] has bad fields.", &discord_id)),
-                    _ => HttpResponse::InternalServerError()
-                        .body(format!("Error while creating player [{}].", &discord_id)),
+                    RepoError::AlreadyExistsError => {
+                        let mut response = Response::new(StatusCode::Conflict);
+                        response.set_body(format!("Player [{}] already exists.", &discord_id));
+                        Ok(response)
+                    }
+                    RepoError::BadFieldError => {
+                        let mut response = Response::new(StatusCode::BadRequest);
+                        response.set_body(format!("Player [{}] has bad fields.", &discord_id));
+                        Ok(response)
+                    }
+                    _ => Ok(Response::new(StatusCode::InternalServerError)),
                 },
             }
         } else {
-            HttpResponse::BadRequest().body("Please checks your fields.")
+            let mut response = Response::new(StatusCode::BadRequest);
+            response.set_body(format!("Player [{}] has bad fields.", &discord_id));
+            Ok(response)
         }
     } else {
-        HttpResponse::BadRequest()
-            .body("The discord_id in the path must match the discord_id in the body.")
+        let mut response = Response::new(StatusCode::BadRequest);
+        response.set_body("The discord_id in the path must match the discord_id in the body.");
+        Ok(response)
     }
 }
 
-#[put("/players/{discord_id}")]
-pub async fn update_player(
-    client: web::Data<Client>,
-    path: web::Path<String>,
-    player: web::Json<Player>,
-) -> impl Responder {
-    let player = player.into_inner();
-    let discord_id = path.into_inner();
+pub async fn update_player(mut req: Request<RepoState>) -> tide::Result {
+    let discord_id = req.param("discord_id").unwrap().to_string();
+    let player = req.body_json::<Player>().await.unwrap();
 
     if discord_id.eq(&player.discord_id) {
         if player.check_fields() {
-            match PlayerRepo::update(&client, &discord_id, player).await {
-                Ok(_) => HttpResponse::Ok().body(format!("Player [{}] updated.", &discord_id)),
+            match PlayerRepo::update(&req.state().client, &discord_id, player).await {
+                Ok(_) => {
+                    let mut response = Response::new(StatusCode::Ok);
+                    response.set_body(format!("Player [{}] updated.", &discord_id));
+                    Ok(response)
+                }
                 Err(e) => match e {
-                    RepoError::DoNotExistsError => HttpResponse::NotFound()
-                        .body(format!("Player [{}] not found.", &discord_id)),
-                    RepoError::BadFieldError => HttpResponse::BadRequest()
-                        .body(format!("Player [{}] has bad fields.", &discord_id)),
-                    _ => HttpResponse::InternalServerError()
-                        .body(format!("Error while updating player [{}].", &discord_id)),
+                    RepoError::DoNotExistsError => Ok(Response::new(StatusCode::NotFound)),
+                    RepoError::BadFieldError => Ok(Response::new(StatusCode::BadRequest)),
+                    _ => Ok(Response::new(StatusCode::BadRequest)),
                 },
             }
         } else {
-            HttpResponse::BadRequest().body("Please checks your fields.")
+            Ok(Response::new(StatusCode::BadRequest))
         }
     } else {
-        HttpResponse::BadRequest()
-            .body("The discord_id in the path must match the discord_id in the body.")
+        let mut response = Response::new(StatusCode::BadRequest);
+        response.set_body("The discord_id in the path must match the discord_id in the body.");
+        Ok(response)
     }
 }
 
-#[delete("/players/{discord_id}")]
-pub async fn delete_player(client: web::Data<Client>, path: web::Path<String>) -> impl Responder {
-    let discord_id = path.into_inner();
+pub async fn delete_player(req: Request<RepoState>) -> tide::Result {
+    let discord_id = req.param("discord_id").unwrap().to_string();
 
-    match PlayerRepo::delete(&client, &discord_id).await {
-        Ok(_) => HttpResponse::Ok().body(format!("Player [{}] deleted.", &discord_id)),
+    match PlayerRepo::delete(&req.state().client, &discord_id).await {
+        Ok(_) => {
+            let mut response = Response::new(StatusCode::Ok);
+            response.set_body(format!("Player [{}] deleted.", &discord_id));
+            Ok(response)
+        }
         Err(e) => match e {
-            RepoError::DoNotExistsError => {
-                HttpResponse::NotFound().body(format!("Player [{}] not found.", &discord_id))
-            }
-            _ => HttpResponse::InternalServerError()
-                .body(format!("Error while deleting player [{}].", &discord_id)),
+            RepoError::DoNotExistsError => Ok(Response::new(StatusCode::NotFound)),
+            _ => Ok(Response::new(StatusCode::InternalServerError)),
         },
     }
 }

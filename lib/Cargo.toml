@@ -7,6 +7,6 @@ edition = "2021"
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
-mongodb = { version = "2.3.0", features = ["bson-uuid-0_8"] }
+mongodb = { version = "2.3.0", default-features = false, features = ["bson-uuid-0_8", "async-std-runtime"] }
 async-trait = "0.1.56"
 futures = "0.3.21"
