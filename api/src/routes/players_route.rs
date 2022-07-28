@@ -6,8 +6,11 @@ use lib::repository::player_repository::PlayerRepo;
 use lib::repository::MongoRepo;
 use lib::repository::RepoError;
 
+use crate::security::auth_guard::AuthGuardForAdmin;
+use crate::security::auth_guard::AuthGuardForUsers;
+
 pub fn config(cfg: &mut web::ServiceConfig) {
-    cfg.service(get_players);
+    cfg.service(web::scope("").guard(AuthGuardForUsers).service(get_players));
     cfg.service(get_player);
     cfg.service(create_player);
     cfg.service(update_player);

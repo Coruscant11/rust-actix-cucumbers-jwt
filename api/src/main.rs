@@ -15,11 +15,6 @@ async fn main() -> std::io::Result<()> {
 
     println!("Token généré : [{}]", token);
 
-    println!(
-        "Est-ce que le token est valide pour RoleAdmin : {}",
-        security::jwt::validate_token(token.clone(), bot::BotRole::RoleAdmin)
-    );
-
     const HOST: &str = "0.0.0.0";
     const PORT: u16 = 8080;
 
@@ -29,11 +24,7 @@ async fn main() -> std::io::Result<()> {
     println!("Starting server [{}:{}].", HOST, PORT);
     HttpServer::new(move || {
         App::new()
-            .service(
-                web::scope("")
-                    .guard(security::auth_guard::AuthGuardForUsers)
-                    .configure(routes::players_route::config),
-            )
+            .configure(routes::players_route::config)
             .app_data(web::Data::new(client.clone()))
     })
     .bind((HOST, PORT))?
