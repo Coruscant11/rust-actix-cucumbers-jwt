@@ -1,11 +1,31 @@
 mod routes;
+mod security;
 
-use actix_web::{guard::Guard, web, App, HttpServer};
+use actix_web::{web, App, HttpServer};
 
-use lib::repository::database_manager::init_database;
+use jsonwebtoken::{
+    decode, decode_header, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation,
+};
+use lib::{
+    models::bot::{self, Bot, BotRole},
+    repository::database_manager::init_database,
+};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    let token = security::jwt::generate_token(bot::Bot::new(
+        "Nouveau bot de JEANNE".to_string(),
+        bot::BotRole::RoleBot,
+        10000000000,
+    ));
+
+    println!("Token généré : [{}]", token);
+
+    println!(
+        "Est-ce que le token est valide pour RoleAdmin : {}",
+        security::jwt::validate_token(token.clone(), bot::BotRole::RoleAdmin)
+    );
+
     const HOST: &str = "0.0.0.0";
     const PORT: u16 = 8080;
 
@@ -17,7 +37,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .service(
                 web::scope("")
-                    .guard(AuthGuard)
+                    .guard(security::auth_guard::AuthGuardForUsers)
                     .configure(routes::players_route::config),
             )
             .app_data(web::Data::new(client.clone()))
@@ -25,26 +45,4 @@ async fn main() -> std::io::Result<()> {
     .bind((HOST, PORT))?
     .run()
     .await
-}
-
-pub struct AuthGuard;
-
-impl Guard for AuthGuard {
-    fn check(&self, ctx: &actix_web::guard::GuardContext<'_>) -> bool {
-        println!(
-            "Token d'authentification reçu : [{}]",
-            ctx.head()
-                .headers()
-                .get("authorization")
-                .unwrap()
-                .to_str()
-                .unwrap()
-                .to_string()
-                .split(" ")
-                .collect::<Vec<&str>>()[1..]
-                .join(" ")
-                .to_string()
-        );
-        return true;
-    }
 }
