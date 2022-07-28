@@ -3,13 +3,7 @@ mod security;
 
 use actix_web::{web, App, HttpServer};
 
-use jsonwebtoken::{
-    decode, decode_header, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation,
-};
-use lib::{
-    models::bot::{self, Bot, BotRole},
-    repository::database_manager::init_database,
-};
+use lib::{models::bot, repository::database_manager::init_database};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
