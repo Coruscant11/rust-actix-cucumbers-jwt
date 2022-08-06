@@ -5,7 +5,7 @@ use mongodb::{
 
 use crate::repository::player_repository::*;
 
-use super::MongoRepo;
+use super::{bot_repository::BotRepo, MongoRepo};
 
 pub const MONGO_URI: &str = "MONGO_URI";
 pub const MONGO_USER: &str = "MONGO_USER";
@@ -55,4 +55,5 @@ pub async fn init_database() -> Client {
 
 async fn init_collections(client: &Client) {
     PlayerRepo::init(client).await.unwrap();
+    BotRepo::init(client).await.unwrap();
 }

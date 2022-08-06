@@ -10,4 +10,5 @@ actix-web = "4.1.0"
 mongodb = { version = "2.3.0", features = ["bson-uuid-0_8"] }
 lib = { path = "../lib" }
 jsonwebtoken = "8.1.1"
+serde = { version = "1.0.140", features = ["derive"] }
 

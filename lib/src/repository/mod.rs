@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use mongodb::Client;
 
+pub mod bot_repository;
 pub mod database_manager;
 pub mod player_repository;
 
@@ -19,11 +20,11 @@ pub enum RepoError {
 #[async_trait]
 pub trait MongoRepo<T, Tid: std::marker::Sync + 'static> {
     async fn init(client: &Client) -> Result<(), RepoError>;
-    async fn create(client: &Client, new_element: T) -> Result<(), RepoError>;
+    async fn create(client: &Client, new_element: &mut T) -> Result<(), RepoError>;
     async fn update(
         client: &Client,
         existing_element_id: &Tid,
-        new_element: T,
+        new_element: &mut T,
     ) -> Result<(), RepoError>;
     async fn delete(client: &Client, existing_element_id: &Tid) -> Result<(), RepoError>;
     async fn get(client: &Client, existing_element_id: &Tid) -> Result<Option<T>, RepoError>;
@@ -36,4 +37,8 @@ pub trait MongoRepo<T, Tid: std::marker::Sync + 'static> {
             Err(e) => Err(e),
         }
     }
+}
+
+pub trait ValidFields {
+    fn check_fields(&mut self) -> bool;
 }

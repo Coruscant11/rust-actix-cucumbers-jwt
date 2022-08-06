@@ -3,6 +3,7 @@ Feature: Player
 
     @serial
     Scenario: Register player not already registered
+        Given I am authenticated as "bot"
         Given a player
             | discord_id | name   | na_id     | jp_id     |
             | 1234567890 | Player | 111222333 | 333222111 |
@@ -13,6 +14,7 @@ Feature: Player
 
     @serial
     Scenario: Register a player already registered
+        Given I am authenticated as "bot"
         Given a player
             | discord_id | name   | na_id     | jp_id     |
             | 1234567891 | Player | 111222333 | 333222111 |
@@ -22,6 +24,7 @@ Feature: Player
 
     @serial
     Scenario: Register a player with invalid data
+        Given I am authenticated as "bot"
         Given a player
             | discord_id | name   | na_id     | jp_id     |
             | letters    | Player | 111222333 | 333222111 |
@@ -33,6 +36,7 @@ Feature: Player
 
     @serial
     Scenario: Get a player not registered yet
+        Given I am authenticated as "bot"
         Given a player
             | discord_id | name   | na_id     | jp_id     |
             | 1234567892 | Player | 111222333 | 333222111 |
@@ -42,6 +46,7 @@ Feature: Player
 
     @serial
     Scenario: Get a player already registered
+        Given I am authenticated as "bot"
         Given a player
             | discord_id | name   | na_id     | jp_id     |
             | 1234567893 | Player | 111222333 | 333222111 |
@@ -51,7 +56,17 @@ Feature: Player
         And the player is returned
 
     @serial
+    Scenario: Get a player already registered without authenticate
+        Given a player
+            | discord_id | name   | na_id     | jp_id     |
+            | 1234567893 | Player | 111222333 | 333222111 |
+        And the discord_id is already registered
+        When I get the player
+        Then I receive a code 401
+
+    @serial
     Scenario: Get all players
+        Given I am authenticated as "bot"
         Given a player
             | discord_id | name   | na_id     | jp_id     |
             | 1234567894 | Player | 111222333 | 333222111 |
@@ -63,6 +78,7 @@ Feature: Player
 
     @serial
     Scenario: Update a player not registered yet
+        Given I am authenticated as "bot"
         Given a player
             | discord_id | name   | na_id     | jp_id     |
             | 1234567896 | Player | 111222333 | 333222111 |
@@ -74,6 +90,7 @@ Feature: Player
 
     @serial
     Scenario: Update a player already registered
+        Given I am authenticated as "bot"
         Given a player
             | discord_id | name   | na_id     | jp_id     |
             | 1234567897 | Player | 111222333 | 333222111 |
@@ -88,6 +105,7 @@ Feature: Player
 
     @serial
     Scenario: Update a player with invalid data
+        Given I am authenticated as "bot"
         Given a player
             | discord_id | name   | na_id     | jp_id     |
             | 1234567898 | Player | 111222333 | 333222111 |
@@ -98,7 +116,28 @@ Feature: Player
         Then I receive a code 400
 
     @serial
-    Scenario: Delete a player not registered yet
+    Scenario: Delete a player not registered yet as bot
+        Given I am authenticated as "bot"
+        Given a player
+            | discord_id | name   | na_id     | jp_id     |
+            | 1234567899 | Player | 111222333 | 333222111 |
+        And the discord_id is not already registered
+        When I delete the player
+        Then I receive a code 403
+
+    @serial
+    Scenario: Delete a player already registered as bot
+        Given I am authenticated as "bot"
+        Given a player
+            | discord_id  | name   | na_id     | jp_id     |
+            | 12345678910 | Player | 111222333 | 333222111 |
+        And the discord_id is already registered
+        When I delete the player
+        Then I receive a code 403
+
+    @serial
+    Scenario: Delete a player not registered yet as admin
+        Given I am authenticated as "admin"
         Given a player
             | discord_id | name   | na_id     | jp_id     |
             | 1234567899 | Player | 111222333 | 333222111 |
@@ -107,7 +146,8 @@ Feature: Player
         Then I receive a code 404
 
     @serial
-    Scenario: Delete a player already registered
+    Scenario: Delete a player already registered as admin
+        Given I am authenticated as "admin"
         Given a player
             | discord_id  | name   | na_id     | jp_id     |
             | 12345678910 | Player | 111222333 | 333222111 |

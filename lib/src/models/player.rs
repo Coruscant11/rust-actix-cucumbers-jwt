@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::repository::ValidFields;
+
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Player {
     pub discord_id: String,
@@ -8,8 +10,9 @@ pub struct Player {
     pub jp_id: String,
 }
 
-impl Player {
-    pub fn check_fields(&self) -> bool {
+impl ValidFields for Player {
+    fn check_fields(&mut self) -> bool {
+        self.discord_id = self.discord_id.trim().to_string();
         let id_and_name = is_string_numeric(self.discord_id.clone())
             && self.discord_id.len() > 0
             && self.name.len() > 0;

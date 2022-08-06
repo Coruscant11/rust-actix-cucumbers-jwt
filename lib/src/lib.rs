@@ -1,5 +1,6 @@
 pub mod models;
 pub mod repository;
+pub mod security;
 
 #[cfg(test)]
 mod tests {

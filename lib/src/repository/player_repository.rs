@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use futures::stream::TryStreamExt;
 use mongodb::{bson::doc, options::IndexOptions, Client, IndexModel};
 
-use super::{database_manager, MongoRepo, RepoError};
+use super::{database_manager, MongoRepo, RepoError, ValidFields};
 
 pub struct PlayerRepo {}
 
@@ -29,7 +29,7 @@ impl MongoRepo<Player, String> for PlayerRepo {
         }
     }
 
-    async fn create(client: &Client, new_element: Player) -> Result<(), RepoError> {
+    async fn create(client: &Client, new_element: &mut Player) -> Result<(), RepoError> {
         if !new_element.check_fields() {
             return Err(RepoError::BadFieldError);
         }
@@ -54,7 +54,7 @@ impl MongoRepo<Player, String> for PlayerRepo {
     async fn update(
         client: &Client,
         existing_element_id: &String,
-        new_element: Player,
+        new_element: &mut Player,
     ) -> Result<(), RepoError> {
         if !new_element.check_fields() {
             return Err(RepoError::BadFieldError);

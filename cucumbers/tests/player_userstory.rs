@@ -2,9 +2,10 @@ use assert_str::assert_str_eq;
 use async_trait::async_trait;
 use cucumber::*;
 use gherkin::Step;
+use lib::models::bot::BotRole;
 use lib::models::player::Player;
 use lib::repository::player_repository::PlayerRepo;
-use lib::repository::MongoRepo;
+use lib::repository::{MongoRepo, ValidFields};
 use mongodb::Client;
 use reqwest::Response;
 use std::convert::Infallible;
@@ -17,6 +18,7 @@ pub struct PlayerWorld {
     pub latest_responses: Vec<Response>,
     pub latest_bodys: Vec<String>,
     pub client: Client,
+    pub token: String,
 }
 
 #[async_trait(?Send)]
@@ -29,8 +31,26 @@ impl World for PlayerWorld {
             latest_responses: vec![],
             latest_bodys: vec![],
             client: lib::repository::database_manager::init_database().await,
+            token: String::new(),
         })
     }
+}
+
+#[given(expr = "I am authenticated as {string}")]
+async fn i_am_authenticated_as(world: &mut PlayerWorld, role: String) {
+    let env_token: String;
+    match role.as_str() {
+        "admin" => {
+            env_token =
+                std::env::var("API_ADMIN_TOKEN").expect("Expected API_ADMIN_TOKEN in environment.")
+        }
+        _ => {
+            env_token =
+                std::env::var("API_BOT_TOKEN").expect("Expected API_BOT_TOKEN in environment.")
+        }
+    }
+
+    world.token = env_token;
 }
 
 #[given(expr = "a player")]
@@ -62,7 +82,7 @@ async fn the_discord_id_is_already_registered(world: &mut PlayerWorld) {
             .unwrap();
 
         if !exist {
-            PlayerRepo::create(&world.client, player.clone())
+            PlayerRepo::create(&world.client, &mut player.clone())
                 .await
                 .unwrap();
         }
@@ -101,7 +121,7 @@ async fn the_discord_id_is_not_already_registered(world: &mut PlayerWorld) {
 #[given(expr = "the discord_id is invalid")]
 async fn the_discord_id_is_invalid(world: &mut PlayerWorld) {
     for player in &world.players {
-        assert_eq!(false, player.check_fields());
+        assert_eq!(false, player.clone().check_fields());
     }
 }
 
@@ -110,33 +130,40 @@ async fn the_discord_id_is_invalid(world: &mut PlayerWorld) {
 async fn i_register_the_player(world: &mut PlayerWorld) {
     for player in &world.players {
         let client = reqwest::Client::new();
-        let res = client
-            .post(format!("{}/{}", PLAYERS_ENDPOINT, &player.discord_id))
-            .json(&player)
-            .send()
-            .await
-            .unwrap();
+        let mut res = client.post(PLAYERS_ENDPOINT).json(&player);
 
-        world.latest_responses.push(res);
+        if world.token.len() > 0 {
+            res = res.bearer_auth(&world.token);
+        }
+
+        world.latest_responses.push(res.send().await.unwrap());
     }
 }
 
 #[when(expr = "I get the player")]
 async fn i_get_the_player(world: &mut PlayerWorld) {
     for player in &world.players {
-        let res = reqwest::get(format!("{}/{}", PLAYERS_ENDPOINT, &player.discord_id))
-            .await
-            .unwrap();
+        let client = reqwest::Client::new();
+        let mut res = client.get(format!("{}/{}", PLAYERS_ENDPOINT, &player.discord_id));
 
-        world.latest_responses.push(res);
+        if world.token.len() > 0 {
+            res = res.bearer_auth(&world.token);
+        }
+
+        world.latest_responses.push(res.send().await.unwrap());
     }
 }
 
 #[when(expr = "I get all players")]
 async fn i_get_all_players(world: &mut PlayerWorld) {
-    let res = reqwest::get(PLAYERS_ENDPOINT).await.unwrap();
+    let client = reqwest::Client::new();
+    let mut res = client.get(PLAYERS_ENDPOINT);
 
-    world.latest_responses.push(res);
+    if world.token.len() > 0 {
+        res = res.bearer_auth(&world.token);
+    }
+
+    world.latest_responses.push(res.send().await.unwrap());
 }
 
 #[when(expr = "I update the player")]
@@ -156,14 +183,15 @@ async fn i_update_the_player(world: &mut PlayerWorld, step: &Step) {
             };
 
             let client = reqwest::Client::new();
-            let res = client
-                .put(format!("{}/{}", PLAYERS_ENDPOINT, &player.discord_id))
-                .json(&player)
-                .send()
-                .await
-                .unwrap();
+            let mut res = client
+                .put(format!("{}/{}", PLAYERS_ENDPOINT, discord_id))
+                .json(&player);
 
-            world.latest_responses.push(res);
+            if world.token.len() > 0 {
+                res = res.bearer_auth(&world.token);
+            }
+
+            world.latest_responses.push(res.send().await.unwrap());
         }
     }
 }
@@ -172,13 +200,13 @@ async fn i_update_the_player(world: &mut PlayerWorld, step: &Step) {
 async fn i_delete_the_player(world: &mut PlayerWorld) {
     for player in &world.players {
         let client = reqwest::Client::new();
-        let res = client
-            .delete(format!("{}/{}", PLAYERS_ENDPOINT, &player.discord_id))
-            .send()
-            .await
-            .unwrap();
+        let mut res = client.delete(format!("{}/{}", PLAYERS_ENDPOINT, &player.discord_id));
 
-        world.latest_responses.push(res);
+        if world.token.len() > 0 {
+            res = res.bearer_auth(&world.token);
+        }
+
+        world.latest_responses.push(res.send().await.unwrap());
     }
 }
 
