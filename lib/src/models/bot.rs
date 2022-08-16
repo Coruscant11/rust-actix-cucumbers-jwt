@@ -51,3 +51,38 @@ impl Default for BotRole {
         Self::RoleBot
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::models::bot::{Bot, BotRole, BotToken};
+    use crate::repository::ValidFields;
+
+    #[test]
+    fn test_bot_role() {
+        let role = BotRole::RoleBot;
+        assert_eq!(role.to_string(), "RoleBot");
+        let role = BotRole::RoleAdmin;
+        assert_eq!(role.to_string(), "RoleAdmin");
+    }
+
+    #[test]
+    fn test_bot_default() {
+        let role = BotRole::default();
+        assert_eq!(role.to_string(), "RoleBot");
+    }
+
+    #[test]
+    fn test_bot_token_check_fields() {
+        let mut bot_token = BotToken {
+            name: "test".to_string(),
+            role: BotRole::RoleBot,
+            token: "test".to_string(),
+        };
+        assert_eq!(bot_token.check_fields(), true);
+        bot_token.name = "".to_string();
+        assert_eq!(bot_token.check_fields(), false);
+        bot_token.name = "test".to_string();
+        bot_token.token = "".to_string();
+        assert_eq!(bot_token.check_fields(), false);
+    }
+}

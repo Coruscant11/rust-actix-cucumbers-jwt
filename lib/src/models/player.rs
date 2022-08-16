@@ -39,3 +39,48 @@ fn is_string_numeric(str: String) -> bool {
     }
     return true;
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::models::player::{is_string_numeric, Player};
+    use crate::repository::ValidFields;
+
+    #[test]
+    fn test_is_string_numeric() {
+        assert_eq!(is_string_numeric("123".to_string()), true);
+        assert_eq!(is_string_numeric("123a".to_string()), false);
+        assert_eq!(is_string_numeric("a123".to_string()), false);
+        assert_eq!(is_string_numeric("".to_string()), false);
+    }
+
+    #[test]
+    fn test_check_fields() {
+        let mut player = Player {
+            discord_id: "123".to_string(),
+            name: "test".to_string(),
+            na_id: "".to_string(),
+            jp_id: "".to_string(),
+        };
+        assert_eq!(player.check_fields(), true);
+        player.na_id = "123456789".to_string();
+        assert_eq!(player.check_fields(), true);
+        player.jp_id = "123456789".to_string();
+        assert_eq!(player.check_fields(), true);
+        player.discord_id = "something".to_string();
+        assert_eq!(player.check_fields(), false);
+        player.discord_id = "".to_string();
+        assert_eq!(player.check_fields(), false);
+        player.discord_id = "123".to_string();
+        assert_eq!(player.check_fields(), true);
+        player.name = "".to_string();
+        assert_eq!(player.check_fields(), false);
+        player.name = "test".to_string();
+        assert_eq!(player.check_fields(), true);
+        player.na_id = "12345678".to_string();
+        assert_eq!(player.check_fields(), false);
+        player.na_id = "123456789".to_string();
+        assert_eq!(player.check_fields(), true);
+        player.jp_id = "12345678".to_string();
+        assert_eq!(player.check_fields(), false);
+    }
+}

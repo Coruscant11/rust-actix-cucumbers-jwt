@@ -2,7 +2,6 @@ use assert_str::assert_str_eq;
 use async_trait::async_trait;
 use cucumber::*;
 use gherkin::Step;
-use lib::models::bot::BotRole;
 use lib::models::player::Player;
 use lib::repository::player_repository::PlayerRepo;
 use lib::repository::{MongoRepo, ValidFields};

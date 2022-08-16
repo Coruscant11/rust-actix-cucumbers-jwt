@@ -1,9 +1,6 @@
 use std::{future::Future, pin::Pin};
 
-use actix_web::{
-    error::{ErrorBadRequest, ErrorUnauthorized},
-    Error, FromRequest,
-};
+use actix_web::{error::ErrorUnauthorized, Error, FromRequest};
 use lib::{models::bot::BotRole, security::jwt::extract_bot_from_token};
 use serde::{Deserialize, Serialize};
 
