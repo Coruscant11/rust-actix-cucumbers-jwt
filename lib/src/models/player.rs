@@ -12,7 +12,7 @@ pub struct Player {
 
 impl ValidFields for Player {
     fn check_fields(&mut self) -> bool {
-        self.discord_id = self.discord_id.trim().to_string();
+        self.discord_id.retain(|c| !c.is_whitespace());
         let id_and_name = is_string_numeric(self.discord_id.clone())
             && self.discord_id.len() > 0
             && self.name.len() > 0;

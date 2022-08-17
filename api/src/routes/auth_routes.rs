@@ -8,8 +8,8 @@ use mongodb::Client;
 
 use lib::models::bot::*;
 use lib::repository::bot_repository::BotRepo;
-use lib::repository::MongoRepo;
 use lib::repository::RepoError;
+use lib::repository::{MongoRepo, ValidFields};
 use lib::security::jwt::*;
 
 use crate::payload::bot_requests::*;
@@ -72,23 +72,29 @@ pub async fn create_bot(
         role: BotRole::RoleBot,
         exp: bot.exp,
     };
+
     let mut bot_token = BotToken {
         name: bot.name.clone(),
         role: bot.role.clone(),
         token: generate_token(&bot),
     };
+    if !bot_token.check_fields() {
+        return HttpResponse::BadRequest().body("Bad fields values.");
+    }
+
     match BotRepo::create(&client, &mut bot_token).await {
-        Ok(_) => HttpResponse::Created()
-            .body(format!("Bot [{}] with [{}] created.", &bot.name, &bot.role)),
+        Ok(_) => HttpResponse::Created().body(format!(
+            "Bot [{}] with [{}] created.",
+            &bot_token.name, &bot_token.role
+        )),
         Err(e) => match e {
             RepoError::AlreadyExistsError => {
-                HttpResponse::Conflict().body(format!("Bot [{}] already exists.", &bot.name))
+                HttpResponse::Conflict().body(format!("Bot [{}] already exists.", &bot_token.name))
             }
-            RepoError::BadFieldError => {
-                HttpResponse::BadRequest().body(format!("Bot [{}] has bad fields.", &bot.name))
-            }
+            RepoError::BadFieldError => HttpResponse::BadRequest()
+                .body(format!("Bot [{}] has bad fields.", &bot_token.name)),
             _ => HttpResponse::InternalServerError()
-                .body(format!("Error while creating bot [{}].", &bot.name)),
+                .body(format!("Error while creating bot [{}].", &bot_token.name)),
         },
     }
 }

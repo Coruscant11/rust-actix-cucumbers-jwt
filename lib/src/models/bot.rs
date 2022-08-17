@@ -41,7 +41,7 @@ impl Bot {
 
 impl ValidFields for BotToken {
     fn check_fields(&mut self) -> bool {
-        self.name = self.name.trim().to_string();
+        self.name.retain(|c| !c.is_whitespace());
         self.name.len() > 0 && self.token.len() > 0
     }
 }
@@ -54,7 +54,7 @@ impl Default for BotRole {
 
 #[cfg(test)]
 mod tests {
-    use crate::models::bot::{Bot, BotRole, BotToken};
+    use crate::models::bot::{BotRole, BotToken};
     use crate::repository::ValidFields;
 
     #[test]

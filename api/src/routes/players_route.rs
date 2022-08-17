@@ -83,6 +83,29 @@ pub async fn update_player(
 
     if discord_id.eq(&player.discord_id) {
         if player.check_fields() {
+            match PlayerRepo::get(&client, &discord_id).await {
+                Ok(old_player) => match old_player {
+                    Some(old_player) => {
+                        if player.na_id.len() == 0 && old_player.na_id.len() > 0 {
+                            player.na_id = old_player.na_id.clone();
+                        }
+                        if player.jp_id.len() == 0 && old_player.jp_id.len() > 0 {
+                            player.jp_id = old_player.jp_id.clone();
+                        }
+                    }
+                    None => {
+                        return HttpResponse::NotFound()
+                            .body(format!("Player [{}] not found.", &player.discord_id))
+                    }
+                },
+                Err(_) => {
+                    return HttpResponse::InternalServerError().body(format!(
+                        "Error while finding player [{}].",
+                        &player.discord_id
+                    ))
+                }
+            }
+
             match PlayerRepo::update(&client, &discord_id, &mut player).await {
                 Ok(_) => HttpResponse::Ok().body(format!("Player [{}] updated.", &discord_id)),
                 Err(e) => match e {
