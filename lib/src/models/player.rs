@@ -50,7 +50,7 @@ mod tests {
         assert_eq!(is_string_numeric("123".to_string()), true);
         assert_eq!(is_string_numeric("123a".to_string()), false);
         assert_eq!(is_string_numeric("a123".to_string()), false);
-        assert_eq!(is_string_numeric("".to_string()), false);
+        assert_eq!(is_string_numeric("".to_string()), true);
     }
 
     #[test]

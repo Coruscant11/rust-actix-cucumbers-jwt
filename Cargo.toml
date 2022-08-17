@@ -2,6 +2,7 @@
 
 members = [
     "api",
+    "bot",
     "lib",
     "cucumbers"
 ]

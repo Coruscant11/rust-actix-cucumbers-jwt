@@ -2,3 +2,4 @@
 
 Cargo.lock
 .keys/
+.env/
