@@ -1,17 +1,26 @@
 version: '3.9'
 services:
-  # api:
-  #   build:
-  #     context: ./
-  #     dockerfile: api/Dockerfile
-  #   container_name: artemis-api
-  #   restart: always
-  #   depends_on:
-  #     - mongodb
-  #   env_file:
-  #     - .env/api_prod.env
-  #   ports:
-  #     - "8080:8080"
+  api:
+    build:
+      context: ./
+      dockerfile: api/Dockerfile
+    container_name: artemis-api
+    restart: always
+    depends_on:
+      - mongodb
+    env_file:
+      - .env/api_prod.env
+    ports:
+      - "8080:8080"
+  bot:
+    build:
+      context: ./
+      dockerfile: bot/Dockerfile
+    container_name: artemis-bot
+    restart: always
+    depends_on:
+      - mongodb
+      - api
   mongodb:
     image: mongo
     container_name: artemis-mongodb
